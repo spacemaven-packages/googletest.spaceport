@@ -1,0 +1,4 @@
+[submodule "downstream"]
+	path = downstream
+	url = https://github.com/google/googletest
+	branch = 52eb8108c5bdec04579160ae17225d66034bd723

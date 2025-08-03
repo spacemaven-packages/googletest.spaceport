@@ -1,0 +1,30 @@
+dependencies {
+    api project(':spaceport:gtest')
+}
+
+cmake {
+    publicHeadersArchive = tasks.register('packagePublicHeaders', Zip) {
+        from(rootProject.layout.projectDirectory.dir('downstream').dir('googlemock').dir('include')) {
+            include 'gmock/**/*.h'
+        }
+
+        into '/'
+
+        archiveClassifier = 'api'
+        archiveBaseName = 'gmock'
+        archiveVersion = project.version as String
+    }
+
+    configurations {
+        primary {
+            outputKind 'static'
+
+            targets {
+                register('gmock') {
+                    target 'gmock'
+                    outputSubDir 'lib'
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+cmake {
+    publicHeadersArchive = tasks.register('packagePublicHeaders', Zip) {
+        from(rootProject.layout.projectDirectory.dir('downstream').dir('googletest').dir('include')) {
+            include 'gtest/**/*.h'
+        }
+
+        into '/'
+
+        archiveClassifier = 'api'
+        archiveBaseName = 'gtest'
+        archiveVersion = project.version as String
+    }
+
+    configurations {
+        primary {
+            outputKind 'static'
+
+            targets {
+                register('gtest') {
+                    target 'gtest'
+                    outputSubDir 'lib'
+                }
+            }
+        }
+    }
+}

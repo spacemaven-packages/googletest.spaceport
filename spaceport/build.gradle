@@ -1,0 +1,115 @@
+subprojects {
+    apply plugin: 'net.derfruhling.cmake-wrapper'
+    apply plugin: 'maven-publish'
+
+    group = rootProject.group
+    version = rootProject.version
+
+    cmake {
+        buildFile = rootProject.file('downstream/CMakeLists.txt')
+
+        targets {
+            linuxX64()
+            macosX64()
+            macosArm64()
+            windowsX64()
+        }
+
+        variants {
+            variant('debug', isDebuggable: true, isOptimized: false) {
+                define CMAKE_BUILD_TYPE: 'Debug'
+            }
+
+            variant('release', isDebuggable: false, isOptimized: true) {
+                define CMAKE_BUILD_TYPE: 'Release'
+            }
+        }
+
+        configurations.configureEach {
+            def projectDir = rootProject.layout.projectDirectory.dir('downstream')
+
+            sourceDirectory = projectDir
+        }
+    }
+
+    publishing {
+        repositories {
+            maven {
+                name 'test'
+                url rootProject.layout.buildDirectory.dir('test-repo')
+            }
+
+            maven {
+                name 'spacemavenNative'
+                url 'https://spacemaven.derfruhling.net/native/'
+
+                credentials {
+                    username rootProject.property('spacemaven.user') as String ?: 'anonymous'
+                    password rootProject.property('spacemaven.key') as String ?: 'anonymous'
+                }
+            }
+        }
+
+        publications {
+            register('maven', MavenPublication) {
+                from components.cmake
+
+                pom {
+                    description = '''
+                    This is an UNOFFICIAL package containing the Google Test project.
+                    
+                    Spaceport is a collection of projects built by the
+                    developer(s) of the Spacemaven repository to provide
+                    useful packages.
+                    '''.stripIndent()
+                    url = 'https://github.com/spacemaven-packages/googletest.spaceport'
+
+                    organization {
+                        name = 'Google'
+                        url = 'https://google.com/'
+                    }
+
+                    developers {
+                        developer {
+                            name = 'Google Test Developers and Contributors'
+                            url = 'https://github.com/google/googletest'
+                            roles = ['Development of Official Project']
+                        }
+
+                        developer {
+                            name = 'der_frühling'
+                            email = 'daedula@derfruhling.net'
+                            url = 'https://derfruhling.net'
+                            roles = ['Spaceport Adaptation']
+                        }
+                    }
+
+                    licenses {
+                        license {
+                            name = 'BSD-3-Clause'
+                            url = 'https://github.com/google/googletest/blob/main/LICENSE'
+                        }
+                    }
+
+                    scm {
+                        tag = 'v' + rootProject.version as String
+                        connection = 'scm:git:https://github.com/spacemaven-packages/googletest.spaceport.git'
+                        developerConnection = 'scm:git:ssh:git@github.com:spacemaven-packages/googletest.spaceport.git'
+                    }
+
+                    issueManagement {
+                        system = 'GitHub'
+                        url = 'https://github.com/spacemaven-packages/googletest.spaceport/issues'
+                    }
+
+                    ciManagement {
+                        system = 'GitHub Actions'
+                        url = 'https://github.com/spacemaven-packages/googletest.spaceport/actions'
+                    }
+
+                    url = 'https://spacemaven.derfruhling.net/net.derfruhling.spaceport/' + project.name
+                }
+            }
+        }
+    }
+}

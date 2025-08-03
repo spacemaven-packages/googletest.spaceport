@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+
+        maven {
+            name 'spacemavenGradlePlugins'
+            url 'https://spacemaven.derfruhling.net/gradle-plugins/'
+        }
+    }
+}
+
+plugins {
+    id 'net.derfruhling.spacemaven.build-cache' version '0.1.0'
+}
+
+include 'spaceport:gtest'
+include 'spaceport:gtest-main'
+include 'spaceport:gmock'
+include 'spaceport:gmock-main'
+
+include('downstream')
+
+project(":downstream").buildFileName = '../downstream.gradle'
