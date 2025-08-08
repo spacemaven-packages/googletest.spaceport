@@ -15,7 +15,6 @@ on:
 jobs:
   clear-cache:
     runs-on: ubuntu-latest
-    continue-on-error: true
     if: ${{ inputs.clear_cache || false }}
     permissions:
       actions: write
@@ -43,6 +42,7 @@ jobs:
             console.log("Clear completed")
   build-and-publish:
     needs: clear-cache
+    if: always()
     strategy:
       matrix:
         include:
