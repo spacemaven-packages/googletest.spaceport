@@ -1,6 +1,11 @@
 name: Build & Publish to Spacemaven Repository
 on:
   workflow_dispatch:
+    inputs:
+      clear_cache:
+        type: boolean
+        default: false
+        description: Clear the cache
   push:
     branches: 
       - master
@@ -8,7 +13,34 @@ on:
       - "**/*.md"
 
 jobs:
+  clear-cache:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    if: ${{ inputs.clear_cache || false }}
+    steps:
+      - name: Clear cache
+        uses: actions/github-script@v6
+        with:
+          # https://stackoverflow.com/questions/63521430/clear-cache-in-github-actions
+          script: |
+            console.log("About to clear")
+            const caches = await github.rest.actions.getActionsCacheList({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            })
+            
+            for (const cache of caches.data.actions_caches) {
+              console.log(cache)
+              github.rest.actions.deleteActionsCacheById({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                cache_id: cache.id,
+              })
+            }
+            
+            console.log("Clear completed")
   build-and-publish:
+    needs: clear-cache
     strategy:
       matrix:
         include:
@@ -53,6 +85,7 @@ jobs:
           add-job-summary: on-failure
           add-job-summary-as-pr-comment: on-failure
           validate-wrappers: true
+          cache-write-only: ${{ inputs.clear_cache || false }}
       - name: Setup Publishing Properties
         run: |
           echo "spacemaven.user=${{ secrets.SPM_USERNAME }}" >> gradle.properties
