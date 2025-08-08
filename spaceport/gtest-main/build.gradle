@@ -8,8 +8,8 @@ cmake {
             outputKind 'static'
 
             targets {
-                register('gmock-main') {
-                    target 'gmock_main'
+                register('gtest-main') {
+                    target 'gtest_main'
                     outputSubDir 'lib'
                 }
             }
