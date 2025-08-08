@@ -17,6 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     if: ${{ inputs.clear_cache || false }}
+    permissions:
+      actions: write
     steps:
       - name: Clear cache
         uses: actions/github-script@v6
