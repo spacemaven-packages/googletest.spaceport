@@ -1,4 +1,5 @@
 name: Build & Publish to Spacemaven Repository
+
 on:
   workflow_dispatch:
     inputs:
@@ -7,121 +8,21 @@ on:
         default: false
         description: Clear the cache
   push:
-    branches: 
+    branches:
       - master
     paths-ignore:
       - "**/*.md"
 
 jobs:
-  clear-cache:
-    runs-on: ubuntu-latest
-    if: ${{ inputs.clear_cache || false }}
+  yes-yes:
+    name: The Reusable Workflow
+    uses: spacemaven-packages/spaceport/.github/workflows/spacemaven.yml@workflows
     permissions:
+      # needed for clear_cache
       actions: write
-    steps:
-      - name: Clear cache
-        uses: actions/github-script@v6
-        with:
-          # https://stackoverflow.com/questions/63521430/clear-cache-in-github-actions
-          script: |
-            console.log("About to clear")
-            const caches = await github.rest.actions.getActionsCacheList({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-            })
-            
-            for (const cache of caches.data.actions_caches) {
-              console.log(cache)
-              github.rest.actions.deleteActionsCacheById({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                cache_id: cache.id,
-              })
-            }
-            
-            console.log("Clear completed")
-  build-and-publish:
-    needs: clear-cache
-    if: always()
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            tasks: "\
-              publishCmakePrimaryDebugLinuxX86_64StaticPublicationToSpacemavenNativeRepository \
-              publishCmakePrimaryReleaseLinuxX86_64StaticPublicationToSpacemavenNativeRepository"
-            cc: cc
-            cxx: c++
-          - os: windows-latest
-            tasks: "\
-              publishCmakePrimaryDebugWindowsX86_64StaticPublicationToSpacemavenNativeRepository \
-              publishCmakePrimaryReleaseWindowsX86_64StaticPublicationToSpacemavenNativeRepository"
-            cc: cl
-            cxx: cl
-          - os: macos-latest
-            tasks: "\
-              publishCmakePrimaryDebugMacosX86_64StaticPublicationToSpacemavenNativeRepository \
-              publishCmakePrimaryReleaseMacosX86_64StaticPublicationToSpacemavenNativeRepository \
-              publishCmakePrimaryDebugMacosAarch64StaticPublicationToSpacemavenNativeRepository \
-              publishCmakePrimaryReleaseMacosAarch64StaticPublicationToSpacemavenNativeRepository"
-            cc: cc
-            cxx: c++
-    name: Build and Publish
-    runs-on: ${{ matrix.os }}
-    env:
-      CC: ${{ matrix.cc }}
-      CXX: ${{ matrix.cxx }}
-    steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          add-job-summary: on-failure
-          add-job-summary-as-pr-comment: on-failure
-          validate-wrappers: true
-          cache-write-only: ${{ inputs.clear_cache || false }}
-      - name: Setup Publishing Properties
-        run: |
-          echo "spacemaven.user=${{ secrets.SPM_USERNAME }}" >> gradle.properties
-          echo "spacemaven.key=${{ secrets.SPM_KEY }}" >> gradle.properties
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1.4.1
-        if: matrix.os == 'windows-latest'
-      - name: Build Project
-        run: ./gradlew build
-      - name: Publish Project
-        run: ./gradlew ${{ matrix.tasks }}
-  finalize-publish:
-    needs: build-and-publish
-    name: Finalize Publication
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          add-job-summary: on-failure
-          add-job-summary-as-pr-comment: on-failure
-          validate-wrappers: true
-      - name: Setup Publishing Properties
-        run: |
-          echo "spacemaven.user=${{ secrets.SPM_USERNAME }}" >> gradle.properties
-          echo "spacemaven.key=${{ secrets.SPM_KEY }}" >> gradle.properties
-      - name: Publish Project
-        run: ./gradlew publishCmakePublicApiPublicationToSpacemavenNativeRepository publishMavenPublicationToSpacemavenNativeRepository
+    with:
+      clear_cache: ${{ inputs.clear_cache || false }}
+      publish_spaceport: true
+    secrets:
+      spacemaven_user: ${{ secrets.SPM_USERNAME }}
+      spacemaven_key: ${{ secrets.SPM_KEY }}
