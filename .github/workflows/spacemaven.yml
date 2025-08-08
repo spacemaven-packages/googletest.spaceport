@@ -1,6 +1,9 @@
 name: Build & Publish to Spacemaven Repository
 on:
+  workflow_dispatch:
   push:
+    branches: 
+      - master
     paths-ignore:
       - "**/*.md"
 
